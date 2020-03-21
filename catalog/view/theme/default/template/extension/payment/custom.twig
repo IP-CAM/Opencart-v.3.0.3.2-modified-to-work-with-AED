@@ -1,0 +1,149 @@
+<style>
+    .highlight {
+        box-shadow: 0px 0px 9px 8px rgba(255, 77, 74, 0.15);
+        width: 18px;
+        height: 18px;
+        border: 4px solid #ff4d4a;
+        background: #fff;
+        position: relative;
+        border-radius: 50%;
+        margin-top: -4px;
+    }
+
+    .step {
+        background: #fff;
+        position: relative;
+        border-radius: 50%;
+        border: 4px solid #ff4d4a;
+        width: 11px;
+        height: 11px;
+        margin-bottom: -6px;
+    }
+
+    .bar {
+        width: 99%;
+        height: 4px;
+        margin: 0px 2px -8px 2px;
+        background: #FF4D4A;
+    }
+
+
+    .cover {
+        width: 75%;
+        margin-bottom: 40px;
+    }
+
+    .spotii-payment-text {
+        font-size: 24px;
+        font-weight: 600;
+        color: #333;
+        display: inline-block;
+        margin-bottom: 20px;
+    }
+
+    .progressbar-container {
+        margin-top: 50px;
+        margin-left: 20px;
+    }
+
+    .spotii-installment-amount {
+        position: absolute;
+        width: 75px;
+        text-align: center;
+        left: 50%;
+        transform: translateX(-50%);
+    }
+
+    .step>.spotii-installment-amount {
+        bottom: 30px;
+    }
+
+    .highlight>.spotii-installment-amount {
+        bottom: 33px;
+    }
+
+
+    .spotii-grand-total {
+        font-size: 20px;
+        font-weight: 600;
+        color: #333;
+        margin-top: 70px;
+        float: right;
+    }
+
+    .steps {
+        list-style-type: none;
+        display: flex;
+        justify-content: space-between;
+        padding: 0;
+        margin: 0;
+    }
+
+    
+
+    .step>.time-period {
+        top: 30px;
+    }
+
+    .highlight>.time-period {
+        top: 33px;
+    }
+
+    .time-period {
+        position: absolute;
+        width: 75px;
+        text-align: center;
+        left: 50%;
+        transform: translateX(-50%);
+    }
+</style>
+
+<form id="customsubmit" name="customsubmit" action="{{ action }}" method="get">
+    {% for key, value in form_params %}
+    <input type="hidden" name="{{ key }}" value="{{ value }}" />
+    {% endfor %}
+</form>
+<div class="buttons">
+    <div class="pull-right">
+        <input type="button" value="{{ button_confirm }}" id="button-confirm" class="btn btn-primary" />
+    </div>
+</div> 
+
+
+
+
+
+<div class='cover'>
+    <span class="spotii-payment-text">Payment Schedule</span>
+    <div class="progressbar-container">
+        <div class="bar"></div>
+        <ul class="steps">
+            <li class="highlight">
+                <span class="spotii-installment-amount"> {{ currency }} {{ installment }}</span>
+                <span class="time-period">Today</span>
+            </li>
+            <li class="step">
+                <span class="spotii-installment-amount"> {{ currency }} {{ installment }} </span>
+                <span class="time-period">In 2 Weeks</span>
+            </li>
+            <li class="step">
+                <span class="spotii-installment-amount">{{ currency }} {{ installment }}</span>
+                <span class="time-period">In 4 Weeks</span>
+            </li>
+            <li class="step">
+                <span class="spotii-installment-amount">{{ currency }} {{ installment }}</span>
+                <span class="time-period">In 6 Weeks</span>
+            </li>
+        </ul>
+    </div>
+    <span class="spotii-grand-total">Total {{total}} </span>
+</div>
+
+
+<script type="text/javascript">
+    $('#button-confirm').bind('click', function () {
+        $('#customsubmit').submit();
+        console.log("clicked...");
+    });
+</script>
+
