@@ -98,7 +98,7 @@
     }
 </style>
 
-<form id="customsubmit" name="customsubmit" action="{{ action }}" method="get">
+<form id="spotiisubmit" name="spotiisubmit" action="{{ action }}" method="get">
     {% for key, value in form_params %}
     <input type="hidden" name="{{ key }}" value="{{ value }}" />
     {% endfor %}
@@ -142,7 +142,7 @@
 
 <script type="text/javascript">
     $('#button-confirm').bind('click', function () {
-        $('#customsubmit').submit();
+        $('#spotiisubmit').submit();
         console.log("clicked...");
     });
 </script>

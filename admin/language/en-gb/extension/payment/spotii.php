@@ -1,13 +1,13 @@
 <?php
 // Heading
-$_['heading_title'] = 'Custom Payment Method';
+$_['heading_title'] = 'Spotii Payment Method';
 
 //Text
 
 // From Ali Pay
 $_['text_extension']                 = 'Extensions';
-$_['text_success']                   = 'Success: You have modified Custom account details!';
-$_['text_edit']                      = 'Edit Custom Pay';
+$_['text_success']                   = 'Success: You have modified Spotii account details!';
+$_['text_edit']                      = 'Edit Spotii Pay';
 $_['text_live']                      = 'Live';
 $_['text_sandbox']                   = 'Sandbox';
 //From Ali Pay Close
@@ -16,7 +16,7 @@ $_['text_sandbox']                   = 'Sandbox';
 // from AP
 // $_['entry_app_id']                   = 'App ID';
 $_['entry_merchant_private_key']     = 'Merchant Private Key';
-$_['entry_custom_public_key']        = 'Custom Public Key';
+$_['entry_spotii_public_key']        = 'Spotii Public Key';
 $_['entry_test']                     = 'Test mode';
 $_['entry_total']                    = 'Total';
 $_['entry_order_status']             = 'Completed Status';

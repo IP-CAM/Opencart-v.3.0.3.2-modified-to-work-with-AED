@@ -1,5 +1,5 @@
 <?php
-class ControllerExtensionPaymentCustom extends Controller{
+class ControllerExtensionPaymentSpotii extends Controller{
     private $token = "";
 
     private function sendCurl($url, $body)
@@ -11,7 +11,6 @@ class ControllerExtensionPaymentCustom extends Controller{
         $header[] = 'Access-Control-Allow-Origin: *';
         if ($this->token!=''){
             $header[] = 'Authorization: Bearer ' . $this->token;
-            $this->log->write("Token: ".$this->token);
         }
         //Start the CURL
         $curl = curl_init($url);
@@ -33,14 +32,38 @@ class ControllerExtensionPaymentCustom extends Controller{
         return array('status' => (int) $code, 'ResponseBody' => $responseBody);
     }
 
-    public function index(){
-        $this->load->model('extension/payment/custom');
-        //Here we get the authentication token using a custom post
+    private function setToken(){
+        $this->load->model('extension/payment/spotii');
+        //Here we get the authentication token using a spotii post
         $url = 'https://auth.sandbox.spotii.me/api/v1.0/merchant/authentication/';
         // This contains the keys required to obtain the auth token
         $body = array(
-            'public_key' => $this->config->get('payment_custom_custom_public_key'),
-            'private_key' => $this->config->get('payment_custom_merchant_private_key')
+            'public_key' => $this->config->get('payment_spotii_spotii_public_key'),
+            'private_key' => $this->config->get('payment_spotii_merchant_private_key')
+        );
+        $body = json_encode($body, JSON_UNESCAPED_UNICODE);
+        //Use the sendCurl function
+        $response = $this->sendCurl($url, $body);
+        if ($response === FALSE) { /* Handle error */
+        }
+        $response_body = $response['ResponseBody'];
+
+        $response_body_arr = json_decode($response_body, true);
+        if (array_key_exists('token', $response_body_arr)) {
+            $this->token = $response_body_arr['token'];
+        } else {
+            error_log("Error on authentication: " . $response_body);
+        }
+    }
+
+    public function index(){
+        $this->load->model('extension/payment/spotii');
+        //Here we get the authentication token using a spotii post
+        $url = 'https://auth.sandbox.spotii.me/api/v1.0/merchant/authentication/';
+        // This contains the keys required to obtain the auth token
+        $body = array(
+            'public_key' => $this->config->get('payment_spotii_spotii_public_key'),
+            'private_key' => $this->config->get('payment_spotii_merchant_private_key')
         );
         $body = json_encode($body, JSON_UNESCAPED_UNICODE);
         //Use the sendCurl function
@@ -61,7 +84,6 @@ class ControllerExtensionPaymentCustom extends Controller{
         $this->load->model('catalog/product');
         $order_id = $this->session->data['order_id'];
         $order_info = $this->model_checkout_order->getOrder($order_id);
-        $this->log->write("Checkout OrderID :".$order_id);
         $body2 = array(
             "reference" => $order_id,
             "display_reference" => $order_id,
@@ -69,7 +91,7 @@ class ControllerExtensionPaymentCustom extends Controller{
             "total" => 240,
             // "total" => $order_info['total'],
             "currency" => $order_info['currency_code'],
-            "confirm_callback_url" => $this->url->link('extension/payment/custom/callback', true),
+            "confirm_callback_url" => $this->url->link('extension/payment/spotii/callback', true),
             "reject_callback_url" => $this->url->link('checkout/checkout', '', true),
 
             // Order
@@ -132,15 +154,13 @@ class ControllerExtensionPaymentCustom extends Controller{
         $url = "https://api.sandbox.spotii.me/api/v1.0/checkouts/";
         
         $body2 = json_encode($body2, JSON_UNESCAPED_UNICODE);
-        //$this->log->write("Checkout Body-JSON: ".$body2);
         $response2 = $this->sendCurl($url, $body2);
-        if ($response2 === FALSE) { /* Handle error */
+        if ($response2 === FALSE) {
         }
         $response_body2 = $response2['ResponseBody'];
         $index = strpos($response_body2, '{');
         $json_body = substr($response_body2, $index);
         $response_body_arr2 = json_decode($json_body, true);
-        //$this->log->write("Response: " . ($response_body_arr2));
         if (array_key_exists('checkout_url', $response_body_arr2)) {  
             $checkout_url = $response_body_arr2['checkout_url'];
             $checkout_url = ''.$checkout_url;
@@ -148,28 +168,66 @@ class ControllerExtensionPaymentCustom extends Controller{
         } else {
             error_log("Error on Checkout: " . $response_body2);
         }
-        $temp = explode("?", $checkout_url, 2);
-        $temp = explode("=", $temp[1], 2);
-        $form_param['token'] = $temp[1];
+        $params = explode("?", $checkout_url, 2);
+        $split_params = explode("=", $params[1], 2);
+        $form_param['token'] = $split_params[1];
         $data['form_params'] = $form_param;
         $data['button_confirm'] = $this->language->get('button_confirm');
         $data['currency'] = $order_info['currency_code'];
         $data['total'] = number_format($order_info['total'], 2, '.', '');
         $data['installment'] = number_format($order_info['total']/4.00, 2, '.', '');
-        return $this->load->view('extension/payment/custom', $data);
+        return $this->load->view('extension/payment/spotii', $data);
     }
 
 
     public function callback()    {
+        $this->setToken();
         $order_data = $this->session->data;
         $order_id = $order_data['order_id'];
-        $this->log->write("CallBack :".$order_id);
+        $this->load->model('checkout/order');
+        $order_info = $this->model_checkout_order->getOrder($order_id);
         $body = array();
         $body = json_encode($body, JSON_UNESCAPED_UNICODE);
-        $url = 'https://api.sandbox.spotii.me/api/v1.0/orders/'.$order_id.'/capture';
+        $url = 'https://api.sandbox.spotii.me/api/v1.0/orders/'.$order_id.'/capture/';
+        
         $response = $this->sendCurl($url, $body);
-        $this->log->write($response);
+        $response_body = $response['ResponseBody'];
+        $response_body = json_decode($response_body, true);
+        $this->log->write("Response Body: ".$response_body);
+        //Handler needs to check response and update order history
+        //with addOrderHistory() method in order.php
+        // number_format($response_body['amount'], 2) == 
+        $order_amount = 240;
+        $this->log->write("Order Data Starts here:");
+        foreach ($order_info as $key => $value) {
+            $this->log->write("Key: ".$key." => Val: ".$value);
+        }
+        if ($response_body['status']=="SUCCESS"){// && number_format($response_body['amount'], 2) == $order_amount){
+            $this->log->write("I get here");
+            $this->load->model('checkout/order');
+            $this->model_checkout_order->addOrderHistory($order_id,1);
+            //$this->load->model('extension/payment/spotii'); REFUND STUFF
+            //$this->model_extension_payment_spotii->addOrder($order_info); REFUND STUFF
+        }
+        
+    }
+
+    public function refund($order_id){
+        $this->load->model('checkout/order');
+        $order_info = $this->model_checkout_order->getOrder($order_id);
+        $url_part = 'https://api.sandbox.spotii.me/api/v1.0/orders/';
+        $full_url = $url_part.$order_id.'/refund';
+        $order_info = $this->model_checkout_order->getOrder($order_id);
+        $total_amount = $order_info['total'];
+        $curr = $order_info['currency_code'];
+        $body = array(
+            "total" => $total_amount,
+            "currency" => $curr
+        );
+        $body = json_encode($body);
+        $response = $this->sendCurl($full_url, $body);
+        if ($response === FALSE) { /* Handle error */
+        }
+        $response_body = $response['ResponseBody'];
     }
 }
-
-https://api.spotii.me/api/v1.0/orders/

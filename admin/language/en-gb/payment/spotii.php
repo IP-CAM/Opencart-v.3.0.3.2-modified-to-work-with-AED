@@ -1,5 +1,5 @@
 <?php
-$_['heading_title'] = 'Hishams Custom Payment Method';
+$_['heading_title'] = 'Spotii Payment Method';
  
 $_['text_enabled'] = 'Enabled';
 $_['text_disabled'] = 'Disabled';

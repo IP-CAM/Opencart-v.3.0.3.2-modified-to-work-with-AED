@@ -39,9 +39,9 @@
                             <label class="col-sm-2 control-label"
                                 for="entry-merchant-private-key">{{ entry_merchant_private_key }}</label>
                             <div class="col-sm-10">
-                                <input type="text" name="payment_custom_merchant_private_key"
-                                    value="{{ payment_custom_private_key }}"
-                                    placeholder="{{ payment_custom_private_key }}" id="entry-app-id"
+                                <input type="text" name="payment_spotii_merchant_private_key"
+                                    value="{{ payment_spotii_private_key }}"
+                                    placeholder="{{ payment_spotii_private_key }}" id="entry-app-id"
                                     class="form-control" />
                                 {% if error_merchant_private_key %}
                                 <div class="text-danger">{{ error_merchant_private_key }}</div>
@@ -50,12 +50,12 @@
                         </div>
                         <!-- Public Key - Required -->
                         <div class="form-group required">
-                            <label class="col-sm-2 control-label" for="entry-custom-public-key">{{ entry_custom_public_key }}</label>
+                            <label class="col-sm-2 control-label" for="entry-spotii-public-key">{{ entry_spotii_public_key }}</label>
                             <div class="col-sm-10">
-                                <textarea name="payment_custom_custom_public_key" rows="5" placeholder="{{ entry_custom_public_key }}"
-                                    id="entry-custom-public-key" class="form-control">{{ payment_custom_custom_public_key }}</textarea>
-                                {% if error_custom_public_key %}
-                                <div class="text-danger">{{ error_custom_public_key }}</div>
+                                <textarea name="payment_spotii_spotii_public_key" rows="5" placeholder="{{ entry_spotii_public_key }}"
+                                    id="entry-spotii-public-key" class="form-control">{{ payment_spotii_spotii_public_key }}</textarea>
+                                {% if error_spotii_public_key %}
+                                <div class="text-danger">{{ error_spotii_public_key }}</div>
                                 {% endif %}
                             </div>
                         </div>
@@ -67,13 +67,13 @@
                             <label class="col-sm-2 control-label" for="input-test"><span data-toggle="tooltip"
                                     title="{{ help_test }}">{{ entry_test }}</span></label>
                             <div class="col-sm-10">
-                                <select name="payment_custom_test" id="input-test" class="form-control">
-                                    {% if payment_custom_test == 'sandbox' %}
+                                <select name="payment_spotii_test" id="input-test" class="form-control">
+                                    {% if payment_spotii_test == 'sandbox' %}
                                     <option value="sandbox" selected="selected">{{ text_sandbox }}</option>
                                     {% else %}
                                     <option value="sandbox">{{ text_sandbox }}</option>
                                     {% endif %}
-                                    {% if payment_custom_test == 'live' %}
+                                    {% if payment_spotii_test == 'live' %}
                                     <option value="live" selected="selected">{{ text_live }}</option>
                                     {% else %}
                                     <option value="live">{{ text_live }}</option>
@@ -86,8 +86,8 @@
                         <div class="form-group">
                             <label class="col-sm-2 control-label" for="input-status">{{ entry_status }}</label>
                             <div class="col-sm-10">
-                                <select name="payment_custom_status" id="input-status" class="form-control">
-                                    {% if payment_custom_status %}
+                                <select name="payment_spotii_status" id="input-status" class="form-control">
+                                    {% if payment_spotii_status %}
                                     <option value="1" selected="selected">{{ text_enabled }}</option>
                                     <option value="0">{{ text_disabled }}</option>
                                     {% else %}
@@ -102,7 +102,7 @@
                         <div class="form-group">
                             <label class="col-sm-2 control-label" for="input-sort-order">{{ entry_sort_order }}</label>
                             <div class="col-sm-10">
-                                <input type="text" name="payment_custom_sort_order" value="{{ payment_custom_sort_order }}"
+                                <input type="text" name="payment_spotii_sort_order" value="{{ payment_spotii_sort_order }}"
                                     placeholder="{{ entry_sort_order }}" id="input-sort-order" class="form-control" />
                             </div>
                         </div>
