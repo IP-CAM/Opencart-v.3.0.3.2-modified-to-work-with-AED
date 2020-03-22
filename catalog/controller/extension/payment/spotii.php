@@ -16,10 +16,10 @@ class ControllerExtensionPaymentSpotii extends Controller{
         $curl = curl_init($url);
         curl_setopt($curl, CURLOPT_URL, $url);
         curl_setopt($curl, CURLOPT_HTTPHEADER, $header);
-        //curl_setopt($curl, CURLOPT_PORT, 443);
-        //curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, true);
-        //curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, 2);
-        //curl_setopt($curl, CURLOPT_USERAGENT, $this->request->server['HTTP_USER_AGENT']);
+        curl_setopt($curl, CURLOPT_PORT, 443);
+        curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, true);
+        curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, 2);
+        curl_setopt($curl, CURLOPT_USERAGENT, $this->request->server['HTTP_USER_AGENT']);
         curl_setopt($curl, CURLOPT_POST, true);
         curl_setopt($curl, CURLOPT_POSTFIELDS, $body); //JSON body
         curl_setopt($curl, CURLOPT_HEADER, true);
@@ -181,31 +181,32 @@ class ControllerExtensionPaymentSpotii extends Controller{
 
 
     public function callback()    {
-        $this->setToken();
-        $order_data = $this->session->data;
-        $order_id = $order_data['order_id'];
+        $order_id = $this->session->data['order_id'];
         $this->load->model('checkout/order');
         $order_info = $this->model_checkout_order->getOrder($order_id);
+
+        //Set up the Capture CURL
+        $this->setToken();
         $body = array();
         $body = json_encode($body, JSON_UNESCAPED_UNICODE);
         $url = 'https://api.sandbox.spotii.me/api/v1.0/orders/'.$order_id.'/capture/';
-        
         $response = $this->sendCurl($url, $body);
         $response_body = $response['ResponseBody'];
         $response_body = json_decode($response_body, true);
-        $this->log->write("Response Body: ".$response_body);
+        //$this->log->write("Response Body: ".$response_body);
         //Handler needs to check response and update order history
         //with addOrderHistory() method in order.php
-        // number_format($response_body['amount'], 2) == 
+        
+        //Assuming we get the successful response from capture we need to compare amounts
+        $order_amount = number_format($order_info['total'], 2);
         $order_amount = 240;
-        $this->log->write("Order Data Starts here:");
-        foreach ($order_info as $key => $value) {
-            $this->log->write("Key: ".$key." => Val: ".$value);
-        }
-        if ($response_body['status']=="SUCCESS"){// && number_format($response_body['amount'], 2) == $order_amount){
-            $this->log->write("I get here");
-            $this->load->model('checkout/order');
-            $this->model_checkout_order->addOrderHistory($order_id,1);
+
+        if ($response_body['status']=="SUCCESS" && $response_body['currency'] == $order_info['currency_code'] && number_format($response_body['amount'], 2) == $order_amount){
+            //Here we want to update the Order History to reflect the Order Status chosen in the setup portal
+            //Then we can redicrect to the successful checkout screen
+            $this->log->write($this->config->get('payment_spotii_order_status_id'));
+            $this->model_checkout_order->addOrderHistory($order_id, $this->config->get('payment_spotii_order_status_id'));
+            $this->response->redirect($this->url->link('checkout/success'));
             //$this->load->model('extension/payment/spotii'); REFUND STUFF
             //$this->model_extension_payment_spotii->addOrder($order_info); REFUND STUFF
         }

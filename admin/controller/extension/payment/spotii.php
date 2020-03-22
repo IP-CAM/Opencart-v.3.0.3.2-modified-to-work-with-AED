@@ -61,6 +61,12 @@ class ControllerExtensionPaymentSpotii extends Controller
             $data['payment_spotii_spotii_public_key'] = $this->config->get('payment_spotii_spotii_public_key');
         }
 
+        if (isset($this->request->post['payment_spotii_order_status_id'])) {
+            $data['payment_spotii_order_status_id'] = $this->request->post['payment_spotii_order_status_id'];
+        } else {
+            $data['payment_spotii_order_status_id'] = $this->config->get('payment_spotii_order_status_id');
+        }
+
 
         if (isset($this->request->post['payment_spotii_status'])) {
             $data['payment_spotii_status'] = $this->request->post['payment_spotii_status'];
@@ -68,12 +74,9 @@ class ControllerExtensionPaymentSpotii extends Controller
             $data['payment_spotii_status'] = $this->config->get('payment_spotii_status');
         }
 
-//Not sure about this code
-        // $this->load->model('localisation/order_status');
+        $this->load->model('localisation/order_status');
 
-        // $data['order_statuses'] = $this->model_localisation_order_status->getOrderStatuses();
-
-//Not sure about this code
+        $data['order_statuses'] = $this->model_localisation_order_status->getOrderStatuses();
 
         if (isset($this->request->post['payment_spotii_sort_order'])) {
             $data['payment_spotii_sort_order'] = $this->request->post['payment_spotii_sort_order'];
