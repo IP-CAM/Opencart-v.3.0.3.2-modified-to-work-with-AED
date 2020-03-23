@@ -137,17 +137,17 @@ class ControllerExtensionPaymentSpotii extends Controller
     }
 
 
-    public function install()
-    {
-        $this->load->model('extension/payment/spotii');
-        $this->model_extension_payment_spotii->install();
-    }
+    // public function install()
+    // {
+    //     $this->load->model('extension/payment/spotii');
+    //     $this->model_extension_payment_spotii->install();
+    // }
 
-    public function uninstall()
-    {
-        $this->load->model('extension/payment/spotii');
-        $this->model_extension_payment_spotii->uninstall();
-    }
+    // public function uninstall()
+    // {
+    //     $this->load->model('extension/payment/spotii');
+    //     $this->model_extension_payment_spotii->uninstall();
+    // }
 
     private function validate()
     {
