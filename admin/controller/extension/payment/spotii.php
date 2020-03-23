@@ -9,23 +9,31 @@ class ControllerExtensionPaymentSpotii extends Controller
         $this->load->model('setting/setting');
         // $this->model_payment_spotii->install();
 
-        if (($this->request->server['REQUEST_METHOD'] == 'POST')) {
+        if ($this->request->server['REQUEST_METHOD'] == 'POST' && $this->validate()) {
             $this->model_setting_setting->editSetting('payment_spotii', $this->request->post);
-            $this->session->data['success'] = 'Saved.';
+            $this->session->data['success'] = $this->language->get('text_success');
  
 
             $this->response->redirect($this->url->link('marketplace/extension', 'user_token=' . $this->session->data['user_token'] . '&type=payment', true));
         }
 
-        // $data['heading_title'] = $this->language->get('heading_title');
-        // $data['entry_text_config_one'] = $this->language->get('text_config_one');
-        // $data['entry_text_config_two'] = $this->language->get('text_config_two');
-        // $data['button_save'] = $this->language->get('text_button_save');
-        // $data['button_cancel'] = $this->language->get('text_button_cancel');
-        // $data['entry_order_status'] = $this->language->get('entry_order_status');
-        // $data['text_enabled'] = $this->language->get('text_enabled');
-        // $data['text_disabled'] = $this->language->get('text_disabled');
-        // $data['entry_status'] = $this->language->get('entry_status');
+        if (isset($this->error['warning'])) {
+            $data['error_warning'] = $this->error['warning'];
+        } else {
+            $data['error_warning'] = '';
+        }
+
+        if (isset($this->error['merchant_private_key'])) {
+            $data['error_merchant_private_key'] = $this->error['merchant_private_key'];
+        } else {
+            $data['error_merchant_private_key'] = '';
+        }
+
+        if (isset($this->error['spotii_public_key'])) {
+            $data['error_spotii_public_key'] = $this->error['spotii_public_key'];
+        } else {
+            $data['error_spotii_public_key'] = '';
+        }
 
         //Set the data for the breadcrumbs
         $data['breadcrumbs'] = array();
@@ -61,17 +69,16 @@ class ControllerExtensionPaymentSpotii extends Controller
             $data['payment_spotii_spotii_public_key'] = $this->config->get('payment_spotii_spotii_public_key');
         }
 
+        if (isset($this->request->post['payment_spotii_total'])) {
+            $data['payment_spotii_total'] = $this->request->post['payment_spotii_total'];
+        } else {
+            $data['payment_spotii_total'] = $this->config->get('payment_spotii_total');
+        }
+
         if (isset($this->request->post['payment_spotii_order_status_id'])) {
             $data['payment_spotii_order_status_id'] = $this->request->post['payment_spotii_order_status_id'];
         } else {
             $data['payment_spotii_order_status_id'] = $this->config->get('payment_spotii_order_status_id');
-        }
-
-
-        if (isset($this->request->post['payment_spotii_status'])) {
-            $data['payment_spotii_status'] = $this->request->post['payment_spotii_status'];
-        } else {
-            $data['payment_spotii_status'] = $this->config->get('payment_spotii_status');
         }
 
         $this->load->model('localisation/order_status');
@@ -87,9 +94,6 @@ class ControllerExtensionPaymentSpotii extends Controller
         $data['header'] = $this->load->controller('common/header');
         $data['column_left'] = $this->load->controller('common/column_left');
         $data['footer'] = $this->load->controller('common/footer');
-        
-
-
         $this->response->setOutput($this->load->view('extension/payment/spotii', $data));
     }
 
@@ -145,5 +149,20 @@ class ControllerExtensionPaymentSpotii extends Controller
         $this->model_extension_payment_spotii->uninstall();
     }
 
-    
+    private function validate()
+    {
+        if (!$this->user->hasPermission('modify', 'extension/payment/spotii')) {
+            $this->error['warning'] = $this->language->get('error_permission');
+        }
+
+        if (!$this->request->post['payment_spotii_merchant_private_key']) {
+            $this->error['merchant_private_key'] = $this->language->get('error_merchant_private_key');
+        }
+
+        if (!$this->request->post['payment_spotii_spotii_public_key']) {
+            $this->error['spotii_public_key'] = $this->language->get('error_spotii_public_key');
+        }
+
+        return !$this->error;
+    }
 }
