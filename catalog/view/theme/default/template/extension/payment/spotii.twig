@@ -10,6 +10,11 @@
         margin-top: -4px;
     }
 
+    .error_text{
+        font: 700;
+        color: #FF4D4A;
+    }
+
     .step {
         background: #fff;
         position: relative;
@@ -113,7 +118,7 @@
 
 
 {% if error  %}
-<p id="test">
+<p id="test" class="error_text">
     {{error}}
 </p>
 
