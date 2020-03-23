@@ -16,7 +16,7 @@ class ModelExtensionPaymentSpotii extends Model
         //If the order meets the minimum size
 
         //Using this for development - remove for deploy
-        //$status = true;
+        $status = true;
         if($status){
             $method_data = array(
                 'code'     => 'spotii',

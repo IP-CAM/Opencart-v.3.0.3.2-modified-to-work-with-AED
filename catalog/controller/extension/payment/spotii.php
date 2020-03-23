@@ -33,6 +33,8 @@ class ControllerExtensionPaymentSpotii extends Controller{
     }
 
     private function setToken(){
+        $json = array();
+        $json['error'] = '';
         $this->load->model('extension/payment/spotii');
         $auth_url =  $this->config->get('payment_spotii_test') == "sandbox" ? 'https://auth.sandbox.spotii.me/api/v1.0/merchant/authentication/' : 'https://auth.spotii.me/api/v1.0/merchant/authentication/';
         
@@ -44,23 +46,33 @@ class ControllerExtensionPaymentSpotii extends Controller{
         $body = json_encode($body, JSON_UNESCAPED_UNICODE);
         //Use the sendCurl function
         $response = $this->sendCurl($auth_url, $body);
-        if ($response === FALSE) { /* Handle error */
+        if ($response['status'] != 200) {
+            return false; // exit the method, auth has failed
         }
         $response_body = $response['ResponseBody'];
-
         $response_body_arr = json_decode($response_body, true);
         if (array_key_exists('token', $response_body_arr)) {
             $this->token = $response_body_arr['token'];
+            return true;
         } else {
             $this->log->write("Error on authentication: " . $response_body);
             $this->log->write("Suggest Checking the Public/Private Keys in Spotii Payment Details");
-            $this->response->redirect($this->url->link('checkout/failure'));
+            $json['error']['auth'] = "Authentication credentials are likely incorrect";
+            // $this->response->addHeader('Content-Type: application/json');
+            // $this->response->setOutput(json_encode($json));
+            // $this->response->redirect($this->url->link('checkout/failure'));
+            return false;
         }
     }
 
     public function index(){
         //First we get set the Auth Token using the config public & private keys
-        $this->setToken();
+        $auth_status = $this->setToken();
+        if (!$auth_status){
+            $data['error'] = "Authentication of Spotii Keys has failed. Merchant needs to check their keys, please contact the merchant for further action";
+            return $this->load->view('extension/payment/spotii_error', $data);
+            exit();
+        }
         //Now we prepare the body to obtain the checkout URL
         $this->load->model('checkout/order');
         $this->load->model('catalog/product');
@@ -133,10 +145,12 @@ class ControllerExtensionPaymentSpotii extends Controller{
 
         $body2['order']['lines'] = $lines;
         $url = $this->config->get('payment_spotii_test') == "sandbox" ? 'https://api.sandbox.spotii.me/api/v1.0/checkouts/' : 'https://api.spotii.me/api/v1.0/checkouts/';
-        
         $body2 = json_encode($body2, JSON_UNESCAPED_UNICODE);
         $response2 = $this->sendCurl($url, $body2);
-        if ($response2 === FALSE) {
+        if ($response2['status'] != 100 || $response2['status'] != 201 ) {
+            $data['error'] = "Unable to obtain valid response from CheckOut URL. Please contact administrator for assistance";
+            return $this->load->view('extension/payment/spotii_error', $data);
+            exit();
         }
         $response_body2 = $response2['ResponseBody'];
         $index = strpos($response_body2, '{');
@@ -144,7 +158,6 @@ class ControllerExtensionPaymentSpotii extends Controller{
         $response_body_arr2 = json_decode($json_body, true);
         if (array_key_exists('checkout_url', $response_body_arr2)) {  
             $checkout_url = $response_body_arr2['checkout_url'];
-            // $this->log->write($checkout_url);
             $data['action'] = $checkout_url;
         } else { // We did not receive a Checkout URL from Spotii, setup to redirect and log failure
             $data['action'] = $this->response->redirect($this->url->link('checkout/failure'));
@@ -183,12 +196,6 @@ class ControllerExtensionPaymentSpotii extends Controller{
         
         //Assuming we get the successful response from capture we need to compare amounts
         $order_amount = number_format($order_info['total'], 2);
-        //$order_amount = 240;
-
-        //Debug Testing Prints
-        // $this->log->write("Order info order amount: ".$order_amount);
-        // $this->log->write("Status: " . $response_body['status']);
-        // $this->log->write("ResponseBody  order amount: " .$response_body['amount']);
         if ($response_body['status']=="SUCCESS" && $response_body['currency'] == $order_info['currency_code'] && number_format($response_body['amount'], 2) == $order_amount){
             $this->log->write("Callback success");
             //Here we want to update the Order History to reflect the Order Status chosen in the setup portal
