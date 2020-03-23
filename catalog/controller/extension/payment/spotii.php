@@ -57,10 +57,6 @@ class ControllerExtensionPaymentSpotii extends Controller{
         } else {
             $this->log->write("Error on authentication: " . $response_body);
             $this->log->write("Suggest Checking the Public/Private Keys in Spotii Payment Details");
-            $json['error']['auth'] = "Authentication credentials are likely incorrect";
-            // $this->response->addHeader('Content-Type: application/json');
-            // $this->response->setOutput(json_encode($json));
-            // $this->response->redirect($this->url->link('checkout/failure'));
             return false;
         }
     }
@@ -69,8 +65,6 @@ class ControllerExtensionPaymentSpotii extends Controller{
         //First we get set the Auth Token using the config public & private keys
         $auth_status = $this->setToken();
         if (!$auth_status){
-            $data['error'] = "Authentication of Spotii Keys has failed. Merchant needs to check their keys, please contact the merchant for further action";
-            return $this->load->view('extension/payment/spotii_error', $data);
             exit();
         }
         //Now we prepare the body to obtain the checkout URL
@@ -149,34 +143,34 @@ class ControllerExtensionPaymentSpotii extends Controller{
         $response2 = $this->sendCurl($url, $body2);
         if ($response2['status'] != 100 || $response2['status'] != 201 ) {
             $data['error'] = "Unable to obtain valid response from CheckOut URL. Please contact administrator for assistance";
-            return $this->load->view('extension/payment/spotii_error', $data);
-            exit();
+            $this->log->write("Error using Spotii Checkout API");
         }
-        $response_body2 = $response2['ResponseBody'];
-        $index = strpos($response_body2, '{');
-        $json_body = substr($response_body2, $index);
-        $response_body_arr2 = json_decode($json_body, true);
-        if (array_key_exists('checkout_url', $response_body_arr2)) {  
-            $checkout_url = $response_body_arr2['checkout_url'];
-            $data['action'] = $checkout_url;
-        } else { // We did not receive a Checkout URL from Spotii, setup to redirect and log failure
-            $data['action'] = $this->response->redirect($this->url->link('checkout/failure'));
-            $this->log->write("Error using Spotii Checkout API: " . $response_body2);
+        else{
+            $response_body2 = $response2['ResponseBody'];
+            $index = strpos($response_body2, '{');
+            $json_body = substr($response_body2, $index);
+            $response_body_arr2 = json_decode($json_body, true);
+            if (array_key_exists('checkout_url', $response_body_arr2)) {  
+                $checkout_url = $response_body_arr2['checkout_url'];
+                $data['action'] = $checkout_url;
+            } else { // We did not receive a Checkout URL from Spotii, setup to redirect and log failure
+                $data['error'] = "Unable to obtain valid response from CheckOut URL. Please contact administrator for assistance";
+                $this->log->write("Error using Spotii Checkout API: " . $response_body2);
+            }
+            $params = explode("?", $checkout_url, 2);
+            $split_params = explode("=", $params[1], 2);
+            $form_param['token'] = $split_params[1];
+            $data['form_params'] = $form_param;
+            $data['button_confirm'] = $this->language->get('button_confirm');
+            $data['currency'] = $order_info['currency_code'];
+            $data['total'] = number_format($order_info['total'], 2, '.', '');
+            $data['installment'] = number_format($order_info['total']/4.00, 2, '.', '');
         }
-        $params = explode("?", $checkout_url, 2);
-        $split_params = explode("=", $params[1], 2);
-        $form_param['token'] = $split_params[1];
-        $data['form_params'] = $form_param;
-        $data['button_confirm'] = $this->language->get('button_confirm');
-        $data['currency'] = $order_info['currency_code'];
-        $data['total'] = number_format($order_info['total'], 2, '.', '');
-        $data['installment'] = number_format($order_info['total']/4.00, 2, '.', '');
         return $this->load->view('extension/payment/spotii', $data);
     }
 
 
-    public function callback()    {
-        
+    public function callback(){
         $order_id = $this->session->data['order_id'];
         $this->load->model('checkout/order');
         $order_info = $this->model_checkout_order->getOrder($order_id);
@@ -208,8 +202,7 @@ class ControllerExtensionPaymentSpotii extends Controller{
         else{ // Either the status was failed or our currency / amounts didnt tally
             $this->log->write("Callback failure");
             $this->response->redirect($this->url->link('checkout/failure'));
-        }
-        
+        }   
     }
 
     //REFUND. Not being implemented in the first release

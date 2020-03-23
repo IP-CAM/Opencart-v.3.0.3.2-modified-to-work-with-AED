@@ -98,12 +98,13 @@
     }
 </style>
 
+<body onload="myFunc()">
 <form id="spotiisubmit" name="spotiisubmit" action="{{ action }}" method="get">
     {% for key, value in form_params %}
     <input type="hidden" name="{{ key }}" value="{{ value }}" />
     {% endfor %}
 </form>
-<div class="buttons">
+<div class="buttons" id="mybutton">
     <div class="pull-right">
         <input type="button" value="{{ button_confirm }}" id="button-confirm" class="btn btn-primary" />
     </div>
@@ -111,9 +112,14 @@
 
 
 
+{% if error  %}
+<p id="test">
+    {{error}}
+</p>
 
+{% else %}
 
-<div class='cover'>
+<div class='cover' id="cover">
     <span class="spotii-payment-text">Payment Schedule</span>
     <div class="progressbar-container">
         <div class="bar"></div>
@@ -139,11 +145,25 @@
     <span class="spotii-grand-total">Total {{total}} </span>
 </div>
 
+{% endif %}
+</body>
+
 
 <script type="text/javascript">
     $('#button-confirm').bind('click', function () {
         $('#spotiisubmit').submit();
-        console.log("clicked...");
     });
+    function myFunc() {
+        var elt = document.getElementById("test");
+        var cov = document.getElementById("cover");
+        if (elt.innerHTML === "") {
+            console.log("set");
+        }
+        else{
+            //cov.innerHTML = "";
+            cov.hidden = true;
+            console.log("erase");
+        }
+    }
 </script>
 

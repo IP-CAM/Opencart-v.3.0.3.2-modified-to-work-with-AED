@@ -163,6 +163,15 @@ class ControllerExtensionPaymentSpotii extends Controller
             $this->error['spotii_public_key'] = $this->language->get('error_spotii_public_key');
         }
 
+        if (empty($this->error)){
+            $this->load->model('extension/payment/spotii');
+            $keys = $this->model_extension_payment_spotii->validateKeys($this->request->post);
+            if(!$keys){
+                $this->error['merchant_private_key'] = "One of your Keys is incorrect";
+                $this->error['spotii_public_key'] = "One of your Keys is incorrect";
+            }
+        }
+
         return !$this->error;
     }
 }
